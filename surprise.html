@@ -1,0 +1,783 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For My Brother.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Cormorant Garamond', 'serif'],
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -40px) scale(1.08)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.95)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+            scroll-behavior: smooth;
+        }
+
+        /* Minimalist ambient background */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        /* 3D Flip Card Styles */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .flip-card-inner { transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        .flipped .flip-card-inner { transform: rotateY(180deg); }
+
+        /* Subtle floating animations */
+        @keyframes float-subtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-float-1 { animation: float-subtle 4s ease-in-out infinite; }
+        .animate-float-2 { animation: float-subtle 4.5s ease-in-out infinite 0.5s; }
+        .animate-float-3 { animation: float-subtle 5s ease-in-out infinite 1s; }
+
+        /* Candle top-view glowing flame */
+        .top-flame {
+            width: 14px;
+            height: 14px;
+            background: radial-gradient(circle, #ffffff 20%, #f59e0b 60%, #ef4444 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 10px #f59e0b, 0 0 20px #ff0000;
+            animation: pulse-glow 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes pulse-glow {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            100% { transform: scale(1.15); opacity: 1; }
+        }
+
+        /* Pulsing Ring for tap indication */
+        .tap-pulse-ring {
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            border: 1.5px dashed rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            animation: rotate-slow 20s linear infinite;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        @keyframes rotate-slow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Gesture Hint Styles */
+        .finger-pointer {
+            position: absolute;
+            bottom: -24px;
+            right: -24px;
+            animation: pointer-bob 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+        @keyframes pointer-bob {
+            0%, 100% { transform: translate(0, 0) rotate(-15deg); }
+            50% { transform: translate(-8px, -8px) rotate(-15deg); }
+        }
+
+        .radiating-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #ef4444; /* red-500 */
+            border-radius: 50%;
+            animation: radiate-ring 1.5s infinite cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .radiating-ring:nth-child(2) {
+            animation-delay: 0.75s;
+        }
+        @keyframes radiate-ring {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(3.5); opacity: 0; }
+        }
+
+        /* Rotating plate style with transition */
+        #cake-svg {
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            transform-origin: center center;
+        }
+
+        /* In-page message styling: Stacked centrally below the cake */
+        .inline-message {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            width: 100%;
+            max-width: 320px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .inline-message.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden selection:bg-black selection:text-white">
+
+    <!-- Faint minimalist background blobs -->
+    <div class="ambient-orb bg-gray-100 w-[500px] h-[500px] top-[-10%] left-[-10%] animate-blob"></div>
+    <div class="ambient-orb bg-gray-200 w-[400px] h-[400px] bottom-[-10%] right-[-10%] animate-blob" style="animation-delay: 3s;"></div>
+
+    <!-- 1. Cinematic Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center transition-opacity duration-1000">
+        <h1 class="font-serif text-2xl text-white tracking-[0.3em] opacity-0 transition-opacity duration-1000" id="loading-text">
+            TO ELDEST ONE
+        </h1>
+        <div class="w-10 h-[1px] bg-white/20 mt-4 animate-pulse-slow"></div>
+    </div>
+
+    <!-- 2. Minimalist Unlock Gate -->
+    <div id="lock-screen" class="fixed inset-0 z-[150] bg-white flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-1000">
+        <p class="font-sans text-[10px] tracking-[0.3em] text-gray-400 uppercase mb-4">Patience</p>
+        <h1 class="font-serif text-3xl text-black mb-8">Preparing your milestone...</h1>
+        <div id="countdown" class="font-sans text-xs tracking-[0.2em] text-gray-500 cursor-pointer select-none hover:text-black transition-colors" onclick="hiddenBypass()">
+            LOADING CELEBRATION...
+        </div>
+    </div>
+
+    <!-- 3. Main Dashboard -->
+    <div id="main-app" class="hidden opacity-0 transition-opacity duration-1000 w-full min-h-screen flex flex-col items-center justify-start p-6 pt-12 pb-24 relative z-10">
+        
+        <!-- Header Section -->
+        <header class="text-center mb-16 relative mt-8">
+            <p class="font-sans text-[10px] tracking-[0.4em] text-gray-400 uppercase mb-4">Since July 28, 1995</p>
+            <h1 class="font-serif text-5xl md:text-6xl lg:text-7xl mb-4 text-black tracking-tight">
+                Happy Birthday, <span class="italic">Shadab Bhaiya</span>.
+            </h1>
+            <div class="w-12 h-[1px] bg-black mx-auto my-6"></div>
+            <p class="font-sans text-gray-500 max-w-md mx-auto text-sm leading-loose font-light px-4">
+                <3
+            </p>
+            
+            <!-- Minimalist Progress Indicator -->
+            <div class="mt-10 flex items-center justify-center gap-3 opacity-90">
+                <span class="text-[9px] font-sans text-gray-400 uppercase tracking-[0.2em]">Opened</span>
+                <span id="counter" class="font-serif text-lg text-black font-semibold">0</span>
+                <span class="text-gray-300">/</span>
+                <span class="font-serif text-lg text-gray-400">3</span>
+                <span class="text-[9px] font-sans text-gray-400 uppercase tracking-[0.2em]">Cards</span>
+            </div>
+        </header>
+
+        <!-- Clean 3D Flip Cards Grid -->
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl z-10">
+            
+            <!-- Card 1: Brotherhood -->
+            <div class="perspective-1000 w-full h-72 cursor-pointer animate-float-1 card-item" onclick="flipCard(this)">
+                <div class="flip-card-inner relative w-full h-full transform-style-3d">
+                    <div class="absolute w-full h-full backface-hidden bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center p-6 transition-all hover:bg-gray-50 shadow-sm hover:shadow-md">
+                        <span class="font-serif text-5xl text-black">01</span>
+                        <p class="text-[10px] font-sans tracking-[0.2em] text-gray-400 mt-6 uppercase font-medium">Tap To flip the card</p>
+                    </div>
+                    <div class="absolute w-full h-full backface-hidden bg-black text-white rounded-xl flex flex-col items-center justify-center p-8 text-center rotate-y-180 shadow-md border border-black">
+                        <p class="font-serif text-lg leading-relaxed text-gray-200">""Half the time when brothers wrestle, it's just an excuse to hug each other." — James Patterson</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Partner in Mischief -->
+            <div class="perspective-1000 w-full h-72 cursor-pointer animate-float-2 card-item" onclick="flipCard(this)">
+                <div class="flip-card-inner relative w-full h-full transform-style-3d">
+                    <div class="absolute w-full h-full backface-hidden bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center p-6 transition-all hover:bg-gray-50 shadow-sm hover:shadow-md">
+                        <span class="font-serif text-5xl text-black">02</span>
+                        <p class="text-[10px] font-sans tracking-[0.2em] text-gray-400 mt-6 uppercase font-medium"></p>
+                    </div>
+                    <div class="absolute w-full h-full backface-hidden bg-black text-white rounded-xl flex flex-col items-center justify-center p-8 text-center rotate-y-180 shadow-md border border-black">
+                        <p class="font-serif text-lg leading-relaxed text-gray-200">“Brothers are playmates in the beginning and best friends for life.”—Anonymous</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: The Anchor -->
+            <div class="perspective-1000 w-full h-72 cursor-pointer animate-float-3 card-item" onclick="flipCard(this, true)">
+                <div class="flip-card-inner relative w-full h-full transform-style-3d">
+                    <div class="absolute w-full h-full backface-hidden bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center p-6 transition-all hover:bg-gray-50 shadow-sm hover:shadow-md">
+                        <span class="font-serif text-5xl text-black">03</span>
+                        <p class="text-[10px] font-sans tracking-[0.2em] text-gray-400 mt-6 uppercase font-medium"></p>
+                    </div>
+                    <div class="absolute w-full h-full backface-hidden bg-black text-white rounded-xl flex flex-col items-center justify-center p-8 text-center rotate-y-180 shadow-md border border-black">
+                        <p class="font-serif text-lg leading-relaxed text-white mb-2">Best of gifts what we could afford</p>
+                        <p class="font-sans text-[9px] uppercase tracking-widest text-amber-400 font-semibold">Your family has gathered to celebrate!</p>
+                    </div>
+                </div>
+            </div>
+        </main>b
+
+        <!-- Hidden Action Trigger -->
+        <div id="final-reveal" class="opacity-0 pointer-events-none transition-all duration-1000 transform translate-y-10 mt-20 z-20 flex flex-col items-center">
+            <button onclick="openLetter()" class="group relative px-10 py-4 bg-transparent border-2 border-black text-black rounded-full overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95">
+                <span class="relative z-10 font-sans tracking-[0.2em] uppercase text-[11px] font-semibold group-hover:text-white transition-colors duration-300">Start Cake Cutting Ceremony</span>
+                <div class="absolute inset-0 bg-black transform scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom duration-300 ease-out z-0"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- 4. Full Screen Celebration Overlay -->
+    <div id="birthday-overlay" class="fixed inset-0 z-50 bg-white opacity-0 pointer-events-none transition-all duration-500 overflow-y-auto">
+        
+        <!-- Full Centered Vertical Layout Container -->
+        <div class="w-full min-h-full flex flex-col items-center pt-8 pb-16 relative">
+            
+            <!-- Centered Cake Space (Touching top almost) -->
+            <div class="relative w-[300px] h-[300px] sm:w-[340px] sm:h-[340px] flex items-center justify-center select-none flex-shrink-0" id="cake-outer-container">
+                
+                <!-- Pulse Ring Indicator for Tap Suggestion (Hidden initially) -->
+                <div id="tap-indicator-ring" class="tap-pulse-ring opacity-0 scale-95 transition-all duration-700"></div>
+
+                <!-- Tap Instruction Icon (Revealed after candle blows out) -->
+                <div id="tap-gesture-hint" class="absolute top-[60%] left-[60%] -translate-x-1/2 -translate-y-1/2 z-50 opacity-0 pointer-events-none transition-opacity duration-700">
+                    <svg class="w-12 h-12 finger-pointer text-gray-800 drop-shadow-xl" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 10.5v-8c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v11.72l-2.66-1.33c-.56-.28-1.24-.13-1.63.36-.45.57-.36 1.41.22 1.86l4.47 3.58V10.5z"/>
+                        <path d="M17.5 10c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v-3.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v3.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v-1c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v6.2c0 2.21 1.79 4 4 4h2.5c2.21 0 4-1.79 4-4v-5.2z"/>
+                    </svg>
+                </div>
+                
+                <!-- Smoke puff effect -->
+                <div id="candle-smoke" class="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-gray-400/20 blur-md rounded-full opacity-0 pointer-events-none transition-all duration-1000 z-40"></div>
+                
+                <!-- Interactive Flame Trigger with Hand Gesture & Radiating Rings -->
+                <div id="interactive-flame-trigger" class="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-12 h-12 z-50 cursor-pointer flex items-center justify-center" onclick="blowOutCandle()">
+                    <div id="gesture-hints" class="absolute inset-0 flex items-center justify-center transition-opacity duration-500">
+                        <div class="radiating-ring"></div>
+                        <div class="radiating-ring"></div>
+                        <svg class="w-8 h-8 finger-pointer text-black" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- Index Finger Pointing -->
+                            <path d="M10 10.5v-8c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v11.72l-2.66-1.33c-.56-.28-1.24-.13-1.63.36-.45.57-.36 1.41.22 1.86l4.47 3.58V10.5z"/>
+                            <path d="M17.5 10c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v-3.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v3.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v-1c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v6.2c0 2.21 1.79 4 4 4h2.5c2.21 0 4-1.79 4-4v-5.2z"/>
+                        </svg>
+                    </div>
+                    <!-- Flame -->
+                    <div id="candle-flame" class="top-flame relative z-10"></div>
+                </div>
+
+                <!-- Minimalist birds-eye view Cake SVG -->
+                <svg id="cake-svg" class="w-full h-full drop-shadow-2xl cursor-pointer z-10" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="onCakeClick()">
+                    <defs>
+                        <mask id="cake-bite-mask">
+                            <rect x="0" y="0" width="300" height="300" fill="white" />
+                            <path id="bite-path-1" d="" fill="black" />
+                            <path id="bite-path-2" d="" fill="black" />
+                            <path id="bite-path-3" d="" fill="black" />
+                            <path id="bite-path-4" d="" fill="black" />
+                        <path id="bite-path-5" d="" fill="black" />
+                        <path id="bite-path-6" d="" fill="black" />
+                        <path id="bite-path-7" d="" fill="black" />
+                        <path id="bite-path-8" d="" fill="black" />
+                    </mask>
+                </defs>
+                <g mask="url(#cake-bite-mask)">
+                        <circle cx="150" cy="150" r="115" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5" />
+                        <circle cx="150" cy="150" r="110" fill="#fcfcfc" stroke="#f3f4f6" stroke-width="1" />
+                        <circle cx="150" cy="150" r="95" fill="#111111" />
+                        <circle cx="150" cy="150" r="92" fill="#ffffff" />
+                        <circle cx="150" cy="150" r="88" fill="#f9fafb" />
+                        <circle cx="150" cy="150" r="76" fill="#111111" />
+                        <circle cx="226" cy="150" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="216" cy="188" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="188" cy="216" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="150" cy="226" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="112" cy="216" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="84" cy="188" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="74" cy="150" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="84" cy="112" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="112" cy="84" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="150" cy="74" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="188" cy="84" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="216" cy="112" r="5" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
+                        <circle cx="150" cy="150" r="66" fill="#ffffff" />
+                        <path d="M125,145 L125,155 M135,145 L135,155 M125,150 L135,150" stroke="#111111" stroke-width="2" stroke-linecap="round" />
+                        <path d="M145,145 L145,155 C152,155 152,145 145,145 M145,150 L150,150" stroke="#111111" stroke-width="2" stroke-linecap="round" />
+                        <path d="M160,145 L160,155 C170,155 170,145 160,145 Z" stroke="#111111" stroke-width="2" stroke-linecap="round" />
+                        <line x1="120" y1="120" x2="126" y2="123" stroke="#111111" stroke-width="2" stroke-linecap="round" />
+                        <line x1="180" y1="120" x2="186" y2="124" stroke="#111111" stroke-width="2" stroke-linecap="round" />
+                        <line x1="130" y1="180" x2="135" y2="175" stroke="#111111" stroke-width="2" stroke-linecap="round" />
+                        <line x1="170" y1="180" x2="178" y2="182" stroke="#111111" stroke-width="2" stroke-linecap="round" />
+                        <circle id="candle-stick" cx="150" cy="150" r="8" fill="#111111" stroke="#ffffff" stroke-width="2" />
+                    </g>
+                </svg>
+            </div>
+
+            <!-- MESSAGES CONTAINER PLACED RIGHT BELOW CAKE IN PAGE FLOW -->
+            <div id="messages-container" class="relative w-full max-w-sm mt-8 h-40 flex-shrink-0 px-4">
+                <div id="float-pop-0" class="inline-message bg-black text-white p-6 rounded-2xl shadow-xl border border-gray-800 text-center">
+                    <p class="font-sans font-bold text-[10px] uppercase tracking-widest text-amber-400 mb-2">Ammi ❤️</p>
+                    <p class="font-serif leading-relaxed text-gray-200">My beloved son, may Allah bless you with a healthy, long life full of endless success and joy.</p>
+                </div>
+                <div id="float-pop-1" class="inline-message bg-black text-white p-6 rounded-2xl shadow-xl border border-gray-800 text-center">
+                    <p class="font-sans font-bold text-[10px] uppercase tracking-widest text-amber-400 mb-2">Papa 👑</p>
+                    <p class="font-serif leading-relaxed text-gray-200">Watching you grow into a strong, smart, capable young man is my greatest pride.</p>
+                </div>
+                <div id="float-pop-2" class="inline-message bg-black text-white p-6 rounded-2xl shadow-xl border border-gray-800 text-center">
+                    <p class="font-sans font-bold text-[10px] uppercase tracking-widest text-amber-400 mb-2">You ✨</p>
+                    <p class="font-serif leading-relaxed text-gray-200 text-xl italic">Make a wish!</p>
+                </div>
+                <div id="float-pop-3" class="inline-message bg-black text-white p-6 rounded-2xl shadow-xl border border-gray-800 text-center">
+                    <p class="font-sans font-bold text-[10px] uppercase tracking-widest text-amber-400 mb-2">Sarfraz Bhai 🌟</p>
+                    <p class="font-serif leading-relaxed text-gray-200">Happy Birthday, brother! You're absolute Mind changer something that my own medicine cant do.
+                    </p>
+                </div>
+                <div id="float-pop-4" class="inline-message bg-black text-white p-6 rounded-2xl shadow-xl border border-gray-800 text-center">
+                    <p class="font-sans font-bold text-[10px] uppercase tracking-widest text-amber-400 mb-2">Aadil Bhai ⚡</p>
+                    <p class="font-serif leading-relaxed text-gray-200">To the coolest brother! Bholi chachu coudnt give car to drive so i had to come with bike to celebrate your BDAY.</p>
+                </div>
+                <div id="float-pop-5" class="inline-message bg-black text-white p-6 rounded-2xl shadow-xl border border-gray-800 text-center">
+                    <p class="font-sans font-bold text-[10px] uppercase tracking-widest text-amber-400 mb-2">Sumaila 🌸</p>
+                    <p class="font-serif leading-relaxed text-gray-200">Wishing you all the joy and laughter today. Thank you for being such an exceptionally kind and supportive brother.</p>
+                </div>
+                <div id="float-pop-6" class="inline-message bg-black text-white p-6 rounded-2xl shadow-xl border border-gray-800 text-center">
+                    <p class="font-sans font-bold text-[10px] uppercase tracking-widest text-amber-400 mb-2">Nida ✨</p>
+                    <p class="font-serif leading-relaxed text-gray-200">Happy Birthday! Your jokes are terrible but your heart is gold. I hope all your sweetest wishes come true.</p>
+                </div>
+                <div id="float-pop-7" class="inline-message bg-black text-white p-6 rounded-2xl shadow-xl border border-gray-800 text-center">
+                    <p class="font-sans font-bold text-[10px] uppercase tracking-widest text-amber-400 mb-2">Adnan 🤝</p>
+                    <p class="font-serif leading-relaxed text-gray-200">Happyyy birthday, my brother, my teacher, and my first website client :))) love u bro </p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confetti" class="fixed inset-0 pointer-events-none z-[100]"></canvas>
+
+    <!-- Pure White Fade Out -->
+    <div id="white-fade" class="fixed inset-0 bg-white z-[999] opacity-0 pointer-events-none transition-opacity" style="transition-duration: 2500ms;"></div>
+
+    <script>
+        // --- Dynamic Time Gate Sequence ---
+        const targetDate = new Date().getTime() + 1000;
+        
+        const loadingScreen = document.getElementById('loading-screen');
+        const loadingText = document.getElementById('loading-text');
+        const lockScreen = document.getElementById('lock-screen');
+        const mainApp = document.getElementById('main-app');
+        const countdownEl = document.getElementById('countdown');
+        let bypassClicks = 0;
+        let countdownInterval;
+
+        window.onload = () => {
+            setTimeout(() => { loadingText.classList.remove('opacity-0'); }, 200);
+
+            setTimeout(() => {
+                loadingScreen.classList.add('opacity-0');
+                setTimeout(() => { loadingScreen.style.display = 'none'; }, 1000);
+                const now = new Date().getTime();
+                if (now < targetDate) { startLockScreen(); } 
+                else { unlockApp(); }
+            }, 2200);
+        };
+
+        function startLockScreen() {
+            lockScreen.classList.remove('hidden');
+            requestAnimationFrame(() => { lockScreen.classList.remove('opacity-0'); });
+
+            countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = targetDate - now;
+
+                if (distance <= 0) {
+                    clearInterval(countdownInterval);
+                    unlockAppFromLock();
+                    return;
+                }
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                countdownEl.innerHTML = `UNLOCKING IN ${seconds}s`;
+            }, 1000);
+        }
+
+        function hiddenBypass() {
+            bypassClicks++;
+            if (bypassClicks >= 3) {
+                clearInterval(countdownInterval);
+                unlockAppFromLock();
+            }
+        }
+
+        function unlockAppFromLock() {
+            lockScreen.classList.add('opacity-0');
+            setTimeout(() => { 
+                lockScreen.style.display = 'none'; 
+                unlockApp();
+            }, 1000);
+        }
+
+        function unlockApp() {
+            mainApp.classList.remove('hidden');
+            requestAnimationFrame(() => { mainApp.classList.remove('opacity-0'); });
+        }
+
+        // --- Card Grid Interaction Mechanics ---
+        const totalCards = 3;
+        const counterEl = document.getElementById('counter');
+        const revealEl = document.getElementById('final-reveal');
+
+        function checkProgress() {
+            const currentlyFlipped = document.querySelectorAll('.card-item.flipped').length;
+            counterEl.innerText = currentlyFlipped;
+            if (currentlyFlipped === totalCards) {
+                revealEl.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+                revealEl.classList.add('opacity-100', 'translate-y-0');
+            } else {
+                revealEl.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+                revealEl.classList.remove('opacity-100', 'translate-y-0');
+            }
+        }
+
+        function flipCard(element, triggerConfetti = false) {
+            element.classList.toggle('flipped');
+            setTimeout(checkProgress, 300);
+        }
+
+        // --- Candle Blow Ritual ---
+        const birthdayOverlay = document.getElementById('birthday-overlay');
+        const candleFlame = document.getElementById('candle-flame');
+        const candleStick = document.getElementById('candle-stick');
+        const candleSmoke = document.getElementById('candle-smoke');
+        const flameTrigger = document.getElementById('interactive-flame-trigger');
+        const gestureHints = document.getElementById('gesture-hints');
+        const tapIndicatorRing = document.getElementById('tap-indicator-ring');
+
+        let isCandleBlownOut = false;
+
+        function openLetter() {
+            birthdayOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            try {
+                const docEl = document.documentElement;
+                if (docEl.requestFullscreen) docEl.requestFullscreen();
+                else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+                else if (docEl.msRequestFullscreen) docEl.msRequestFullscreen();
+            } catch(e) {}
+        }
+
+        function closeLetter() {
+            birthdayOverlay.classList.add('opacity-0', 'pointer-events-none');
+            try {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            } catch(e) {}
+        }
+
+        function blowOutCandle() {
+            if (isCandleBlownOut) return;
+            isCandleBlownOut = true;
+
+            // Hide the animated gesture hints gracefully
+            if (gestureHints) {
+                gestureHints.style.opacity = '0';
+                setTimeout(() => { gestureHints.style.display = 'none'; }, 500);
+            }
+
+            if (candleFlame) {
+                // BUG FIX: Stop the infinite CSS pulse animation so it stops overriding inline styles
+                candleFlame.style.animation = 'none';
+                
+                // Trigger the fade-out on the next animation frame for a smooth shrink
+                requestAnimationFrame(() => {
+                    candleFlame.style.transition = 'all 0.5s ease-out';
+                    candleFlame.style.transform = 'scale(0)';
+                    candleFlame.style.opacity = '0';
+                });
+            }
+            if (flameTrigger) {
+                flameTrigger.style.pointerEvents = 'none';
+            }
+
+            if (candleSmoke) {
+                candleSmoke.style.opacity = '1';
+                candleSmoke.style.transform = 'translateY(-20px) scale(1.3)';
+                setTimeout(() => {
+                    candleSmoke.style.opacity = '0';
+                    setTimeout(() => { candleSmoke.style.transform = ''; }, 500);
+                }, 800);
+            }
+
+            // Once flame is out, prompt interaction with the cake via subtle pulsing ring
+            if (tapIndicatorRing) {
+                tapIndicatorRing.classList.remove('opacity-0', 'scale-95');
+                tapIndicatorRing.classList.add('opacity-100', 'scale-100');
+            }
+            
+            const tapGesture = document.getElementById('tap-gesture-hint');
+            if (tapGesture) {
+                tapGesture.classList.remove('opacity-0');
+                tapGesture.classList.add('opacity-100');
+            }
+        }
+
+        const biteCoordinates = [
+            "M 0,0 H 90 Q 72,30 90,60 Q 72,90 90,120 Q 72,150 90,180 Q 72,210 90,240 Q 72,270 90,300 H 0 Z",
+            "M 0,0 H 115 Q 97,30 115,60 Q 97,90 115,120 Q 97,150 115,180 Q 97,210 115,240 Q 97,270 115,300 H 0 Z",
+            "M 0,0 H 140 Q 122,30 140,60 Q 122,90 140,120 Q 122,150 140,180 Q 122,210 140,240 Q 122,270 140,300 H 0 Z",
+            "M 0,0 H 165 Q 147,30 165,60 Q 147,90 165,120 Q 147,150 165,180 Q 147,210 165,240 Q 147,270 165,300 H 0 Z",
+            "M 0,0 H 190 Q 172,30 190,60 Q 172,90 190,120 Q 172,150 190,180 Q 172,210 190,240 Q 172,270 190,300 H 0 Z",
+            "M 0,0 H 220 Q 202,30 220,60 Q 202,90 220,120 Q 202,150 220,180 Q 202,210 220,240 Q 202,270 220,300 H 0 Z",
+            "M 0,0 H 250 Q 232,30 250,60 Q 232,90 250,120 Q 232,150 250,180 Q 232,210 250,240 Q 232,270 250,300 H 0 Z",
+            "M 0,0 H 300 V 300 H 0 Z"
+        ];
+
+        function playBiteSoundEffect() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const bufferSize = audioCtx.sampleRate * 0.12;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(320, audioCtx.currentTime);
+                filter.Q.setValueAtTime(6, audioCtx.currentTime);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start();
+            } catch (e) {}
+        }
+
+        let currentBiteStage = 0;
+
+        function onCakeClick() {
+            if (!isCandleBlownOut) return;
+            if (currentBiteStage >= 8) return;
+
+            // Hide tap hint on first bite
+            if (currentBiteStage === 0) {
+                const tapGesture = document.getElementById('tap-gesture-hint');
+                if (tapGesture) {
+                    tapGesture.classList.remove('opacity-100');
+                    tapGesture.classList.add('opacity-0');
+                }
+            }
+
+            playBiteSoundEffect();
+
+            const currentRotation = (currentBiteStage + 1) * 35;
+            const cakeSvg = document.getElementById('cake-svg');
+            if (cakeSvg) cakeSvg.style.transform = `rotate(${currentRotation}deg)`;
+
+            const bitePathElement = document.getElementById(`bite-path-${currentBiteStage + 1}`);
+            if (bitePathElement) bitePathElement.setAttribute('d', biteCoordinates[currentBiteStage]);
+
+            if (currentBiteStage === 3) {
+                const stick = document.getElementById('candle-stick');
+                if (stick) stick.style.display = 'none';
+            }
+
+            for (let i = 0; i < 8; i++) {
+                const prevPop = document.getElementById(`float-pop-${i}`);
+                if (prevPop) prevPop.classList.remove('active');
+            }
+
+            const currentPop = document.getElementById(`float-pop-${currentBiteStage}`);
+            if (currentPop) currentPop.classList.add('active');
+
+            currentBiteStage++;
+
+            if (currentBiteStage >= 8) {
+                const ring = document.getElementById('tap-indicator-ring');
+                if (ring) {
+                    ring.classList.remove('opacity-100');
+                    ring.classList.add('opacity-0');
+                }
+                
+                // 1. Confetti burst
+                setTimeout(() => { createConfetti(window.innerWidth / 2, window.innerHeight, 100, true); }, 1500);
+                
+                // 2. Fade screen to pure white
+                setTimeout(() => {
+                    const whiteFade = document.getElementById('white-fade');
+                    if (whiteFade) {
+                        whiteFade.classList.remove('opacity-0');
+                        whiteFade.classList.add('opacity-100');
+                    }
+                }, 5000); // 5 seconds after the final bite
+
+                // 3. Reset back to home screen smoothly
+                setTimeout(() => {
+                    resetAppToHome();
+                }, 7500); // Reset after the fade completes
+            }
+        }
+
+        function resetAppToHome() {
+            closeLetter();
+            
+            // Reset states
+            currentBiteStage = 0;
+            isCandleBlownOut = false;
+            
+            // Reset Cake SVG & Bites
+            const cakeSvg = document.getElementById('cake-svg');
+            if (cakeSvg) cakeSvg.style.transform = `rotate(0deg)`;
+            for (let i = 1; i <= 8; i++) {
+                const p = document.getElementById(`bite-path-${i}`);
+                if (p) p.setAttribute('d', '');
+                
+                const pop = document.getElementById(`float-pop-${i-1}`);
+                if (pop) pop.classList.remove('active');
+            }
+            
+            // Reset candle, stick, and interaction hints
+            const stick = document.getElementById('candle-stick');
+            if (stick) stick.style.display = 'block';
+            
+            const trigger = document.getElementById('interactive-flame-trigger');
+            if (trigger) trigger.style.pointerEvents = 'auto';
+
+            const flame = document.getElementById('candle-flame');
+            if (flame) {
+                flame.style.animation = ''; // Restores the continuous glowing animation
+                flame.style.transition = 'none';
+                flame.style.transform = 'scale(1)';
+                flame.style.opacity = '1';
+                flame.style.display = 'block';
+            }
+            
+            const hint = document.getElementById('gesture-hints');
+            if (hint) {
+                hint.style.display = 'flex';
+                hint.style.opacity = '1';
+            }
+
+            const tapGesture = document.getElementById('tap-gesture-hint');
+            if (tapGesture) {
+                tapGesture.classList.remove('opacity-100');
+                tapGesture.classList.add('opacity-0');
+            }
+            
+            // Reset cards on the main screen
+            document.querySelectorAll('.card-item.flipped').forEach(el => el.classList.remove('flipped'));
+            checkProgress(); // Will hide the "Start Cake Cutting" button and reset counter
+            
+            // Fade out the white screen overlay smoothly to reveal the home screen
+            const whiteFade = document.getElementById('white-fade');
+            if (whiteFade) {
+                whiteFade.classList.remove('opacity-100');
+                whiteFade.classList.add('opacity-0');
+            }
+        }
+
+        // --- High-Fidelity Monochrome Confetti System ---
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let isAnimating = false;
+        let animationId;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const colors = ['#000000', '#222222', '#555555', '#888888', '#cccccc', '#ffffff', '#000000'];
+
+        class Particle {
+            constructor(x, y, isMassive = false) {
+                this.x = x; 
+                this.y = y;
+                this.size = Math.random() * 7 + 3;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = isMassive ? (Math.random() * 22 + 10) : (Math.random() * 11 + 7);
+                this.vx = Math.cos(angle) * velocity * (isMassive ? 1 : 0.5); 
+                this.vy = -Math.abs(Math.sin(angle) * velocity) - (isMassive ? 14 : 5); 
+                this.gravity = 0.45; 
+                this.friction = 0.95;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = (Math.random() - 0.5) * 6;
+                this.opacity = 1;
+            }
+            update() {
+                this.vx *= this.friction; 
+                this.vy *= this.friction; 
+                this.vy += this.gravity;
+                this.x += this.vx; 
+                this.y += this.vy; 
+                this.rotation += this.rotationSpeed;
+                if (this.y > canvas.height - 80) this.opacity -= 0.025; 
+            }
+            draw() {
+                if (this.opacity <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.opacity; 
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.rotation * Math.PI) / 180); 
+                ctx.fillStyle = this.color;
+                if (this.color === '#ffffff') {
+                    ctx.strokeStyle = '#dddddd'; 
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                }
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        function createConfetti(x, y, count = 50, isMassive = false) {
+            for (let i = 0; i < count; i++) particles.push(new Particle(x, y, isMassive)); 
+            if (!isAnimating) { isAnimating = true; animate(); }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let allDead = true;
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update(); 
+                particles[i].draw();
+                if (particles[i].y < canvas.height && particles[i].opacity > 0) allDead = false; 
+            }
+            particles = particles.filter(p => p.y < canvas.height && p.opacity > 0);
+            if (!allDead) animationId = requestAnimationFrame(animate); 
+            else { isAnimating = false; cancelAnimationFrame(animationId); }
+        }
+    </script>
+</body>
+</html>
+
+
