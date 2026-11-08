@@ -1,13 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=../../angel19.html">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>For Angel</title>
-  <script>window.location.replace('../../angel19.html');</script>
-</head>
-<body>
-  <p>Redirecting to <a href="../../angel19.html">Angel's page</a>…</p>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>For Angel</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --card: #f9fafb;
+        --ink: #111111;
+        --muted: #6b7280;
+        --accent: #f59e0b;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .container {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 80px 20px 40px;
+        text-align: center;
+      }
+      .eyebrow {
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-size: 0.7rem;
+      }
+      h1 {
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        margin: 20px 0 10px;
+      }
+      .text {
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.8;
+      }
+      .card {
+        margin-top: 28px;
+        background: var(--card);
+        border: 1px solid rgba(17,17,17,0.08);
+        border-radius: 18px;
+        padding: 28px 22px;
+      }
+      .badge {
+        display: inline-block;
+        margin-top: 24px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #111;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .home {
+        display: inline-block;
+        margin-top: 18px;
+        text-decoration: none;
+        color: var(--ink);
+        border: 1px solid var(--ink);
+        border-radius: 999px;
+        padding: 10px 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="eyebrow">July 3rd</div>
+      <h1>Happy 19th, Angel.</h1>
+      <p class="text">A celebration of you, and a tribute to our friendship.</p>
+      <div class="card">
+        <p>Here’s to 19 years of you being amazing — thoughtful, kind, brilliant, and full of life.</p>
+        <p>May this new chapter bring you joy, peace, unforgettable memories, and everything your heart deserves.</p>
+      </div>
+      <a class="badge" href="./surprise.html">Open the Surprise</a>
+      <div><a class="home" href="../index.html">Home</a></div>
+    </div>
+  </body>
 </html>
